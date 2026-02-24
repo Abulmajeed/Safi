@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سافي – الدعم الفني | Safi Support</title>
+  <meta name="description" content="الدعم الفني لتطبيق سافي لتنظيف الصور. Safi app support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #D4AF37; --gold-dark: #B8941F;
+      --bg: #050507; --bg2: #0d0d14;
+      --glass: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #f0f0f0; --muted: #888; --radius: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Arabic', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    #canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .4; }
+    .blob { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; animation: floatBlob 14s ease-in-out infinite; }
+    .blob1 { width: 450px; height: 450px; background: rgba(212,175,55,.1); top: -100px; left: -100px; animation-delay: 0s; }
+    .blob2 { width: 350px; height: 350px; background: rgba(60,100,255,.08); bottom: 50px; right: -80px; animation-delay: -7s; }
+    @keyframes floatBlob { 0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,30px) scale(1.1)} }
+    .wrap { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+    header { position: relative; z-index: 1; text-align: center; padding: 80px 24px 50px; }
+    .app-logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 96px; height: 96px; border-radius: 28px;
+      background: linear-gradient(135deg, var(--gold), #cd7f32);
+      box-shadow: 0 0 48px rgba(212,175,55,.4); margin-bottom: 24px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .app-logo svg { width: 52px; height: 52px; fill: #000; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 40px rgba(212,175,55,.35)}50%{box-shadow:0 0 70px rgba(212,175,55,.6)} }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3rem); font-weight: 700;
+      background: linear-gradient(90deg, var(--gold), #fff, var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-size: 200%; animation: shimmer 4s linear infinite; margin-bottom: 12px;
+    }
+    @keyframes shimmer { 0%{background-position:200% center}100%{background-position:-200% center} }
+    header p { color: var(--muted); font-size: 1rem; line-height: 1.7; }
+    .lang-toggle {
+      display: inline-flex; gap: 0; margin-top: 20px;
+      border: 1px solid var(--border); border-radius: 30px; overflow: hidden;
+    }
+    .lang-toggle button {
+      background: transparent; border: none; color: var(--muted);
+      padding: 8px 20px; font-size: .85rem; cursor: pointer; font-family: inherit; transition: all .3s;
+    }
+    .lang-toggle button.active { background: linear-gradient(90deg, var(--gold), var(--gold-dark)); color: #000; font-weight: 700; }
+
+    /* Hero features */
+    .hero-features {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px; margin: 40px 0 32px;
+    }
+    .hf-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 16px; text-align: center;
+      animation: fadeUp .6s ease both; transition: transform .3s;
+    }
+    .hf-card:hover { transform: translateY(-4px); border-color: rgba(212,175,55,.3); }
+    .hf-icon { font-size: 2rem; margin-bottom: 10px; }
+    .hf-card h3 { font-size: .9rem; font-weight: 600; margin-bottom: 4px; }
+    .hf-card p { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 30px; padding: 8px 20px; color: var(--muted);
+      font-size: .85rem; cursor: pointer; font-family: inherit; transition: all .3s;
+    }
+    .tab-btn.active { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.4); color: var(--gold); font-weight: 600; }
+
+    /* Sections */
+    .card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 28px 24px;
+      margin-bottom: 14px; backdrop-filter: blur(16px);
+      transition: transform .3s, border-color .3s; animation: fadeUp .5s ease both;
+    }
+    .card:hover { transform: translateY(-3px); border-color: rgba(212,175,55,.2); }
+    .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .card-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0; }
+    .card-icon svg { width: 22px; height: 22px; }
+    .card h2 { font-size: 1rem; font-weight: 600; }
+    .card p, .card li { font-size: .92rem; color: #bbb; line-height: 1.85; }
+    .card ul { padding-right: 20px; list-style: disc; }
+    .card li { margin-bottom: 6px; }
+
+    /* FAQ accordion */
+    details { border-bottom: 1px solid var(--border); padding: 16px 0; }
+    details:last-child { border-bottom: none; }
+    summary {
+      cursor: pointer; font-size: .95rem; font-weight: 600;
+      list-style: none; display: flex; justify-content: space-between; align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-size: 1.3rem; color: var(--gold); transition: transform .3s; }
+    details[open] summary::after { transform: rotate(45deg); }
+    details p { margin-top: 12px; font-size: .9rem; color: #bbb; line-height: 1.8; }
+
+    /* CTA contact */
+    .contact-cta {
+      background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(205,127,50,.08));
+      border: 1px solid rgba(212,175,55,.25);
+      border-radius: var(--radius); padding: 36px 28px; text-align: center;
+      margin-top: 32px; animation: fadeUp .6s ease .4s both;
+    }
+    .contact-cta h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+    .contact-cta p { color: var(--muted); margin-bottom: 24px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+      color: #000; font-weight: 700; font-size: .95rem; font-family: inherit;
+      border: none; border-radius: 14px; padding: 14px 28px; cursor: pointer;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 24px rgba(212,175,55,.3);
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(212,175,55,.45); }
+
+    footer { position: relative; z-index: 1; text-align: center; padding: 32px 24px; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--border); }
+    footer a { color: var(--gold); text-decoration: none; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: rgba(212,175,55,.3); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+
+  <header>
+    <div class="app-logo">
+      <svg viewBox="0 0 24 24"><path d="M19.5 3.5L18 2 16.5 3.5 15 2l-1.5 1.5L12 2l-1.5 1.5L9 2 7.5 3.5 6 2 4.5 3.5 3 2v20l1.5-1.5L6 22l1.5-1.5L9 22l1.5-1.5L12 22l1.5-1.5L15 22l1.5-1.5L18 22l1.5-1.5L21 22V2l-1.5 1.5zM19 19.09H5V4.91h14v14.18zM6 15h12v2H6zm0-4h12v2H6zm0-4h12v2H6z"/></svg>
+    </div>
+    <h1 id="mainTitle">سافي – الدعم الفني</h1>
+    <p id="mainSub">نحن هنا لمساعدتك في الحصول على تجربة نظيفة ومثالية</p>
+    <div class="lang-toggle">
+      <button class="active" onclick="setLang('ar')">العربية</button>
+      <button onclick="setLang('en')">English</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- App features strip -->
+    <div class="hero-features" id="featGrid">
+      <div class="hf-card" style="animation-delay:.05s"><div class="hf-icon">🧹</div><h3 class="feat-t1">تنظيف المعرض</h3><p class="feat-d1">مراجعة الصور بإيماءة واحدة</p></div>
+      <div class="hf-card" style="animation-delay:.1s"><div class="hf-icon">🔒</div><h3 class="feat-t2">خصوصية كاملة</h3><p class="feat-d2">كل شيء يبقى على جهازك</p></div>
+      <div class="hf-card" style="animation-delay:.15s"><div class="hf-icon">⚡</div><h3 class="feat-t3">سرعة فائقة</h3><p class="feat-d3">واجهة سلسة ومحسّنة</p></div>
+      <div class="hf-card" style="animation-delay:.2s"><div class="hf-icon">👑</div><h3 class="feat-t4">سافي برو</h3><p class="feat-d4">مرة واحدة مدى الحياة</p></div>
+      <div class="hf-card" style="animation-delay:.25s"><div class="hf-icon">🚫</div><h3 class="feat-t5">بدون إعلانات</h3><p class="feat-d5">مع اشتراك برو</p></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" id="tabRow">
+      <button class="tab-btn active" onclick="showTab('faq',this)" id="tabFaq">الأسئلة الشائعة</button>
+      <button class="tab-btn" onclick="showTab('guide',this)" id="tabGuide">دليل الاستخدام</button>
+      <button class="tab-btn" onclick="showTab('contact',this)" id="tabContact">تواصل معنا</button>
+      <button class="tab-btn" onclick="showTab('legal',this)" id="tabLegal">قانوني / Legal</button>
+    </div>
+
+    <!-- FAQ -->
+    <div id="tab-faq">
+      <div class="card">
+        <details open>
+          <summary id="faq1q">كيف أستخدم تطبيق سافي؟</summary>
+          <p id="faq1a">افتح التطبيق ← اختر الألبوم أو الفئة ← مرّر للأسفل لحذف الصورة أو اضغط زر الإبقاء للاحتفاظ بها. عند الانتهاء اضغط "حذف" لتنفيذ جميع القرارات دفعة واحدة.</p>
+        </details>
+        <details>
+          <summary id="faq2q">ما الفرق بين سافي المجاني وسافي برو؟</summary>
+          <p id="faq2a">النسخة المجانية تحتوي على إعلانات تظهر كل فترة. سافي برو (دفعة واحدة مدى الحياة) يزيل جميع الإعلانات ويفتح كل الميزات بدون قيود. السعر: 49.99 ريال أو ما يعادله.</p>
+        </details>
+        <details>
+          <summary id="faq3q">كيف أستعيد مشترياتي على جهاز جديد؟</summary>
+          <p id="faq3a">افتح الإعدادات ← سافي برو ← اضغط "استعادة المشتريات". تأكد أنك مسجل بنفس Apple ID المستخدم في الشراء الأصلي.</p>
+        </details>
+        <details>
+          <summary id="faq4q">هل التطبيق يحتاج اتصال بالإنترنت؟</summary>
+          <p id="faq4a">التطبيق يعمل بالكامل دون اتصال. الإنترنت مطلوب فقط لتحميل الإعلانات (إذا لم تكن مشتركاً في برو) أو لاستعادة المشتريات.</p>
+        </details>
+        <details>
+          <summary id="faq5q">هل يمكنني التراجع عن حذف الصور؟</summary>
+          <p id="faq5a">نعم! الصور المحذوفة تذهب إلى "المحذوفة مؤخراً" في تطبيق الصور لمدة 30 يوماً. يمكنك استعادتها من هناك.</p>
+        </details>
+        <details>
+          <summary id="faq6q">لماذا يطلب التطبيق إذن التتبع؟</summary>
+          <p id="faq6a">لعرض إعلانات أكثر ملاءمة لك عبر Google AdMob. يمكنك رفض الإذن وستستمر في استخدام التطبيق بإعلانات غير مخصصة. مستخدمو سافي برو لا تظهر لهم إعلانات أصلاً.</p>
+        </details>
+      </div>
+    </div>
+
+    <!-- Guide -->
+    <div id="tab-guide" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(99,202,183,.15)"><svg viewBox="0 0 24 24" fill="#63cac7"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg></div>
+          <h2 id="guideTitle">دليل الاستخدام خطوة بخطوة</h2>
+        </div>
+        <ul id="guideList">
+          <li><strong>الخطوة 1:</strong> امنح التطبيق إذن الوصول إلى مكتبة الصور</li>
+          <li><strong>الخطوة 2:</strong> اختر فئة من الصفحة الرئيسية (لقطات شاشة، تكرارات، فيديوهات…)</li>
+          <li><strong>الخطوة 3:</strong> مرّر للأسفل = حذف، اضغط زر الإبقاء = حفظ</li>
+          <li><strong>الخطوة 4:</strong> عند الانتهاء، اضغط زر "حذف" لتنفيذ جميع القرارات</li>
+          <li><strong>نصيحة:</strong> استخدم "مراجعة الحذف" قبل التنفيذ لمراجعة ما ستحذف</li>
+          <li><strong>ألبوم مكتمل؟</strong> إذا أضفت صوراً جديدة سيظهر شارة "جديد" تلقائياً</li>
+        </ul>
+      </div>
+
+      <div class="card" style="animation-delay:.15s">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(212,175,55,.15)"><svg viewBox="0 0 24 24" fill="#D4AF37"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg></div>
+          <h2 id="proTitle">كيف أحصل على سافي برو؟</h2>
+        </div>
+        <ul id="proList">
+          <li>افتح الإعدادات ← اضغط على "سافي برو"</li>
+          <li>اضغط على زر "فتح سافي برو – [السعر]"</li>
+          <li>أكمل الدفع عبر Apple ID</li>
+          <li>ستختفي الإعلانات فوراً بعد الشراء</li>
+          <li>السعر: دفعة واحدة 49.99 ريال (أو ما يعادله)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div id="tab-contact" style="display:none">
+      <div class="contact-cta">
+        <h2 id="ctaTitle">📬 تواصل مع الدعم الفني</h2>
+        <p id="ctaSub">يسعدنا مساعدتك في أي وقت. أرسل لنا بريداً إلكترونياً وسنرد خلال 24-48 ساعة.</p>
+        <a href="mailto:abdulmajeed.k.r@gmail.com?subject=Safi%20App%20Support" class="btn">
+          <svg viewBox="0 0 24 24" fill="#000" width="18" height="18"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          <span id="ctaBtn">راسلنا الآن</span>
+        </a>
+        <p style="margin-top:16px;font-size:.8rem;color:var(--muted)" id="ctaEmail">abdulmajeed.k.r@gmail.com</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(255,80,80,.15)"><svg viewBox="0 0 24 24" fill="#ff5050"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+          <h2 id="bugTitle">الإبلاغ عن مشكلة</h2>
+        </div>
+        <p id="bugDesc">إذا واجهت مشكلة تقنية، أرسل لنا البريد التالي مع ذكر:</p>
+        <ul id="bugList">
+          <li>إصدار iOS (مثال: iOS 17.4)</li>
+          <li>طراز الجهاز (مثال: iPhone 15 Pro)</li>
+          <li>وصف دقيق للمشكلة</li>
+          <li>لقطة شاشة إن أمكن</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Legal -->
+    <div id="tab-legal" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(212,175,55,.15)"><svg viewBox="0 0 24 24" fill="#D4AF37"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+          <h2>شروط الاستخدام وسياسة ابل</h2>
+        </div>
+        <ul>
+          <li><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" style="color:var(--gold)">اتفاقية ترخيص المستخدم النهائي (EULA) – Apple</a></li>
+          <li><a href="https://www.apple.com/legal/internet-services/itunes/" target="_blank" style="color:var(--gold)">شروط خدمات Apple Media Services</a></li>
+          <li><a href="../privacy-policy/" style="color:var(--gold)">سياسة خصوصية سافي</a></li>
+        </ul>
+      </div>
+      <div class="card" style="animation-delay:.1s">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(100,196,255,.15)"><svg viewBox="0 0 24 24" fill="#64c4ff"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg></div>
+          <h2>تفاصيل الاشتراك</h2>
+        </div>
+        <ul>
+          <li><strong>اسم المنتج:</strong> Safi Pro Lifetime</li>
+          <li><strong>Product ID:</strong> com.safi.app.lifetime</li>
+          <li><strong>النوع:</strong> شراء لمرة واحدة (Non-Consumable)</li>
+          <li><strong>السعر:</strong> 49.99 ريال سعودي (أو ما يعادله بعملتك)</li>
+          <li><strong>لا تجديد تلقائي، لا رسوم شهرية</strong></li>
+          <li>الدفع يتم عبر Apple ID عند تأكيد الشراء</li>
+          <li>يمكن استعادة الشراء على أجهزة أخرى بنفس Apple ID</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Safi App · <a href="../">الرئيسية</a> · <a href="../privacy-policy/">سياسة الخصوصية</a> · <a href="mailto:abdulmajeed.k.r@gmail.com">abdulmajeed.k.r@gmail.com</a></p>
+  </footer>
+
+  <script>
+    // Canvas particles
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+    function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    class Particle {
+      constructor() { this.reset(); }
+      reset() { this.x=Math.random()*W; this.y=Math.random()*H; this.r=Math.random()*1.5+.5; this.vx=(Math.random()-.5)*.3; this.vy=(Math.random()-.5)*.3; this.alpha=Math.random()*.5+.1; this.gold=Math.random()>.7; }
+      update() { this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset(); }
+      draw() { ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fillStyle=this.gold?`rgba(212,175,55,${this.alpha})`:`rgba(200,200,255,${this.alpha*.5})`; ctx.fill(); }
+    }
+    for(let i=0;i<120;i++) particles.push(new Particle());
+    function tick() { ctx.clearRect(0,0,W,H); particles.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(tick); }
+    tick();
+
+    // Tab switching
+    function showTab(id, btn) {
+      ['faq','guide','contact','legal'].forEach(t => {
+        document.getElementById('tab-'+t).style.display = t===id ? '' : 'none';
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // Lang
+    const tr = {
+      ar: {
+        mainTitle: 'سافي – الدعم الفني',
+        mainSub: 'نحن هنا لمساعدتك في الحصول على تجربة نظيفة ومثالية',
+        tab_faq: 'الأسئلة الشائعة', tab_guide: 'دليل الاستخدام', tab_contact: 'تواصل معنا', tab_legal: 'قانوني',
+        faq1q: 'كيف أستخدم تطبيق سافي؟',
+        faq1a: 'افتح التطبيق ← اختر الألبوم ← مرّر للأسفل لحذف الصورة أو اضغط زر الإبقاء للاحتفاظ بها.',
+        guideTitle: 'دليل الاستخدام خطوة بخطوة',
+        proTitle: 'كيف أحصل على سافي برو؟',
+        ctaTitle: '📬 تواصل مع الدعم الفني',
+        ctaSub: 'يسعدنا مساعدتك في أي وقت. أرسل لنا بريداً إلكترونياً وسنرد خلال 24-48 ساعة.',
+        ctaBtn: 'راسلنا الآن',
+        bugTitle: 'الإبلاغ عن مشكلة',
+        ft1: 'تنظيف المعرض', fd1: 'مراجعة الصور بإيماءة واحدة',
+        ft2: 'خصوصية كاملة', fd2: 'كل شيء يبقى على جهازك',
+        ft3: 'سرعة فائقة', fd3: 'واجهة سلسة ومحسّنة',
+        ft4: 'سافي برو', fd4: 'مرة واحدة مدى الحياة',
+        ft5: 'بدون إعلانات', fd5: 'مع اشتراك برو',
+      },
+      en: {
+        mainTitle: 'Safi – Support',
+        mainSub: 'We\'re here to help you get the cleanest experience possible',
+        tab_faq: 'FAQ', tab_guide: 'User Guide', tab_contact: 'Contact Us', tab_legal: 'Legal',
+        faq1q: 'How do I use Safi?',
+        faq1a: 'Open the app → choose a category → swipe down to delete or tap Keep to save it. When done tap "Delete" to execute all decisions at once.',
+        guideTitle: 'Step-by-Step User Guide',
+        proTitle: 'How do I get Safi Pro?',
+        ctaTitle: '📬 Contact Support',
+        ctaSub: 'We\'re happy to help anytime. Send us an email and we\'ll reply within 24-48 hours.',
+        ctaBtn: 'Email Us Now',
+        bugTitle: 'Report a Bug',
+        ft1: 'Gallery Cleaner', fd1: 'Review photos with one swipe',
+        ft2: 'Full Privacy', fd2: 'Everything stays on your device',
+        ft3: 'Fast Performance', fd3: 'Smooth, optimized UI',
+        ft4: 'Safi Pro', fd4: 'One-time lifetime unlock',
+        ft5: 'No Ads', fd5: 'With Pro subscription',
+      }
+    };
+    function setLang(lang) {
+      const isAr = lang === 'ar';
+      const t = tr[lang];
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      document.getElementById('mainTitle').textContent = t.mainTitle;
+      document.getElementById('mainSub').textContent = t.mainSub;
+      document.getElementById('tabFaq').textContent = t.tab_faq;
+      document.getElementById('tabGuide').textContent = t.tab_guide;
+      document.getElementById('tabContact').textContent = t.tab_contact;
+      document.getElementById('tabLegal').textContent = t.tab_legal;
+      document.getElementById('faq1q').textContent = t.faq1q;
+      document.getElementById('faq1a').textContent = t.faq1a;
+      document.getElementById('guideTitle').textContent = t.guideTitle;
+      document.getElementById('proTitle').textContent = t.proTitle;
+      document.getElementById('ctaTitle').textContent = t.ctaTitle;
+      document.getElementById('ctaSub').textContent = t.ctaSub;
+      document.getElementById('ctaBtn').textContent = t.ctaBtn;
+      document.getElementById('bugTitle').textContent = t.bugTitle;
+      document.querySelectorAll('.feat-t1').forEach(e=>e.textContent=t.ft1);
+      document.querySelectorAll('.feat-d1').forEach(e=>e.textContent=t.fd1);
+      document.querySelectorAll('.lang-toggle button').forEach(b => {
+        b.classList.toggle('active', b.textContent.includes(isAr ? 'العربية' : 'English'));
+      });
+    }
+  </script>
+</body>
+</html>

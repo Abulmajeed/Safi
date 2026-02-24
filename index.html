@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سافي – نظّف معرضك، حرّر مساحتك | Safi App</title>
+  <meta name="description" content="سافي – تطبيق تنظيف الصور الذكي لـ iPhone. راجع وحذف الصور غير المرغوبة بسرعة فائقة وخصوصية تامة." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #D4AF37; --gold-light: #f0d060; --gold-dark: #B8941F;
+      --bg: #04040a; --bg2: #0a0a14;
+      --glass: rgba(255,255,255,0.045);
+      --border: rgba(255,255,255,0.08);
+      --text: #f2f2f2; --muted: #888; --radius: 20px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Arabic', sans-serif; overflow-x: hidden; }
+
+    /* ── Canvas ── */
+    #canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ── Blobs ── */
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+    .b1 { width: 600px; height: 600px; background: rgba(212,175,55,.12); top: -200px; right: -150px; animation: fb 16s ease-in-out infinite; }
+    .b2 { width: 500px; height: 500px; background: rgba(80,50,200,.08); bottom: -100px; left: -100px; animation: fb 20s ease-in-out infinite reverse; }
+    .b3 { width: 300px; height: 300px; background: rgba(0,180,255,.06); top: 50%; left: 40%; animation: fb 12s ease-in-out infinite 4s; }
+    @keyframes fb { 0%,100%{transform:translate(0,0)}50%{transform:translate(40px,50px)} }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; inset-inline: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(4,4,10,.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background .3s;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold), #cd7f32);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 18px rgba(212,175,55,.4);
+    }
+    .nav-logo-icon svg { width: 20px; height: 20px; fill: #000; }
+    .nav-logo-text { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-link {
+      color: var(--muted); text-decoration: none; font-size: .88rem;
+      padding: 7px 16px; border-radius: 30px; transition: all .3s;
+      border: 1px solid transparent;
+    }
+    .nav-link:hover { color: var(--text); background: var(--glass); border-color: var(--border); }
+    .nav-link.cta {
+      background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+      color: #000; font-weight: 700; border-color: transparent;
+    }
+    .nav-link.cta:hover { box-shadow: 0 0 20px rgba(212,175,55,.4); }
+    .lang-toggle-nav {
+      display: inline-flex; border: 1px solid var(--border); border-radius: 30px; overflow: hidden; margin-right: 6px;
+    }
+    .lang-toggle-nav button {
+      background: transparent; border: none; color: var(--muted);
+      padding: 6px 14px; font-size: .8rem; cursor: pointer; font-family: inherit; transition: all .3s;
+    }
+    .lang-toggle-nav button.active { background: rgba(212,175,55,.15); color: var(--gold); font-weight: 600; }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 120px 24px 80px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(212,175,55,.1); border: 1px solid rgba(212,175,55,.25);
+      border-radius: 30px; padding: 7px 18px; margin-bottom: 32px;
+      font-size: .82rem; color: var(--gold);
+      animation: fadeDown .8s ease both;
+    }
+    .app-icon-hero {
+      width: 120px; height: 120px; border-radius: 32px;
+      background: linear-gradient(145deg, var(--gold), #cd7f32, #8B6914);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 80px rgba(212,175,55,.5), 0 20px 60px rgba(0,0,0,.5);
+      margin: 0 auto 36px;
+      animation: iconFloat 6s ease-in-out infinite;
+    }
+    .app-icon-hero svg { width: 64px; height: 64px; fill: #000; }
+    @keyframes iconFloat {
+      0%,100%{transform:translateY(0) rotate(0deg)}
+      33%{transform:translateY(-8px) rotate(1deg)}
+      66%{transform:translateY(-4px) rotate(-1deg)}
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 7vw, 4.5rem); font-weight: 700; line-height: 1.1;
+      margin-bottom: 20px; animation: fadeUp .8s ease .2s both;
+    }
+    .hero h1 .gold-text {
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-size: 200%; animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200%}100%{background-position:-200%} }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.2rem); color: var(--muted); max-width: 560px;
+      margin: 0 auto 40px; line-height: 1.8; animation: fadeUp .8s ease .35s both;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; animation: fadeUp .8s ease .5s both; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+      color: #000; font-weight: 700; font-size: 1rem; font-family: inherit;
+      padding: 15px 30px; border-radius: 16px; border: none; cursor: pointer;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 6px 30px rgba(212,175,55,.35);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(212,175,55,.5); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--glass); border: 1px solid var(--border);
+      color: var(--text); font-size: 1rem; font-family: inherit;
+      padding: 15px 30px; border-radius: 16px; cursor: pointer;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.07); border-color: rgba(212,175,55,.3); }
+
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+
+    /* ── Stats ── */
+    .stats {
+      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+      margin-top: 60px; animation: fadeUp .8s ease .7s both;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+    .stat-label { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Section ── */
+    section { position: relative; z-index: 1; padding: 80px 24px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; background: rgba(212,175,55,.1); border: 1px solid rgba(212,175,55,.2);
+      border-radius: 30px; padding: 5px 16px; font-size: .8rem; color: var(--gold);
+      margin-bottom: 16px; font-weight: 600;
+    }
+    .section-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; margin-bottom: 12px; }
+    .section-sub { color: var(--muted); font-size: 1rem; line-height: 1.75; max-width: 560px; }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px; margin-top: 48px;
+    }
+    .feat-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      transition: transform .3s, border-color .3s;
+      animation: fadeUp .6s ease both;
+    }
+    .feat-card:hover { transform: translateY(-5px); border-color: rgba(212,175,55,.3); }
+    .feat-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 1.5rem;
+    }
+    .feat-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    .feat-card p { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── How it works ── */
+    .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 48px; max-width: 680px; }
+    .step {
+      display: flex; align-items: flex-start; gap: 18px;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px 20px;
+      transition: transform .3s; animation: fadeUp .6s ease both;
+    }
+    .step:hover { transform: translateX(-5px); border-color: rgba(212,175,55,.2); }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #000; font-size: .9rem;
+    }
+    .step h3 { font-size: .95rem; font-weight: 600; margin-bottom: 4px; }
+    .step p { font-size: .85rem; color: var(--muted); line-height: 1.65; }
+
+    /* ── Pages section (big cards) ── */
+    .pages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 48px; }
+    .page-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 36px 28px; text-decoration: none;
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      display: block; animation: fadeUp .6s ease both; position: relative; overflow: hidden;
+    }
+    .page-card::before {
+      content: ""; position: absolute; inset: 0; border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(212,175,55,.06), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .page-card:hover { transform: translateY(-6px); border-color: rgba(212,175,55,.35); box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .page-card:hover::before { opacity: 1; }
+    .page-card-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .page-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+    .page-card p { font-size: .9rem; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+    .page-card-arrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--gold); font-size: .88rem; font-weight: 600;
+    }
+
+    /* ── Pro section ── */
+    .pro-section {
+      background: linear-gradient(135deg, rgba(212,175,55,.1), rgba(205,127,50,.06), transparent);
+      border: 1px solid rgba(212,175,55,.2); border-radius: 28px; padding: 56px 40px; text-align: center;
+    }
+    .pro-price {
+      display: inline-flex; align-items: baseline; gap: 6px; margin: 20px 0 28px;
+    }
+    .pro-price-num { font-size: 3rem; font-weight: 800; color: var(--gold); }
+    .pro-price-label { font-size: 1rem; color: var(--muted); }
+    .pro-features { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 32px; }
+    .pro-feat-pill {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 30px; padding: 7px 16px; font-size: .85rem; color: var(--text);
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1; border-top: 1px solid var(--border);
+      padding: 40px 40px 32px; text-align: center;
+    }
+    .footer-links { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 16px; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: .85rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--gold); }
+    footer p { color: var(--muted); font-size: .78rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      nav { padding: 14px 20px; }
+      .nav-links .nav-link:not(.cta) { display: none; }
+      section { padding: 60px 20px; }
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: rgba(212,175,55,.3); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </div>
+      <span class="nav-logo-text">سافي</span>
+    </a>
+    <div class="nav-links">
+      <div class="lang-toggle-nav">
+        <button class="active" onclick="setLang('ar')">ع</button>
+        <button onclick="setLang('en')">EN</button>
+      </div>
+      <a href="support/" class="nav-link" id="navSupport">الدعم</a>
+      <a href="privacy-policy/" class="nav-link" id="navPrivacy">الخصوصية</a>
+      <a href="https://apps.apple.com" class="nav-link cta" id="navDownload">تحميل مجاناً</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">
+      <span>✨</span>
+      <span id="heroBadge">متاح الآن على App Store</span>
+    </div>
+    <div class="app-icon-hero">
+      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+    </div>
+    <h1><span id="heroTitle1">نظّف معرضك</span><br/><span class="gold-text" id="heroTitle2">حرّر مساحتك</span></h1>
+    <p id="heroSub">سافي يجعل تنظيف آلاف الصور أمراً ممتعاً وسريعاً. إيماءة واحدة تكفي.</p>
+    <div class="hero-btns">
+      <a href="https://apps.apple.com" class="btn-primary" id="heroCta">
+        <svg viewBox="0 0 24 24" fill="#000" width="20" height="20"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <span id="heroBtnText">تحميل على App Store</span>
+      </a>
+      <a href="support/" class="btn-secondary" id="heroSupportBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+        <span id="heroSupportText">الدعم الفني</span>
+      </a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="stat1n">∞</div><div class="stat-label" id="stat1l">صورة يمكن مراجعتها</div></div>
+      <div class="stat"><div class="stat-num" id="stat2n">0</div><div class="stat-label" id="stat2l">بيانات تُرسل للخارج</div></div>
+      <div class="stat"><div class="stat-num" id="stat3n">1×</div><div class="stat-label" id="stat3l">دفعة واحدة مدى الحياة</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section>
+    <div class="section-inner">
+      <div class="section-tag" id="featTag">المميزات</div>
+      <h2 class="section-title" id="featTitle">كل ما تحتاجه لمعرض نظيف</h2>
+      <p class="section-sub" id="featSub">سافي يجمع الأدوات الذكية في تطبيق واحد بسيط وسريع وخاص.</p>
+      <div class="features-grid">
+        <div class="feat-card" style="animation-delay:.05s">
+          <div class="feat-icon" style="background:rgba(99,202,183,.12)">🧹</div>
+          <h3 class="fh1">مراجعة سريعة</h3>
+          <p class="fp1">تصفح الصور بإيماءة واحدة. سكرول للأسفل = حذف، زر الإبقاء = حفظ.</p>
+        </div>
+        <div class="feat-card" style="animation-delay:.1s">
+          <div class="feat-icon" style="background:rgba(255,165,0,.12)">📁</div>
+          <h3 class="fh2">تصنيف ذكي</h3>
+          <p class="fp2">لقطات شاشة، تكرارات، فيديوهات، صور كبيرة — كل فئة في مكانها.</p>
+        </div>
+        <div class="feat-card" style="animation-delay:.15s">
+          <div class="feat-icon" style="background:rgba(100,150,255,.12)">🔒</div>
+          <h3 class="fh3">خصوصية تامة</h3>
+          <p class="fp3">لا خوادم، لا حسابات، لا رفع صور. كل شيء يبقى على جهازك.</p>
+        </div>
+        <div class="feat-card" style="animation-delay:.2s">
+          <div class="feat-icon" style="background:rgba(200,100,255,.12)">↩️</div>
+          <h3 class="fh4">حذف آمن</h3>
+          <p class="fp4">الصور تذهب إلى "المحذوفة مؤخراً" فقط — لديك 30 يوماً للاستعادة.</p>
+        </div>
+        <div class="feat-card" style="animation-delay:.25s">
+          <div class="feat-icon" style="background:rgba(255,80,80,.12)">⚡</div>
+          <h3 class="fh5">أداء فائق</h3>
+          <p class="fp5">محسّن لأحدث أجهزة iPhone مع دعم كامل لمكتبة الصور الكبيرة.</p>
+        </div>
+        <div class="feat-card" style="animation-delay:.3s">
+          <div class="feat-icon" style="background:rgba(212,175,55,.12)">👑</div>
+          <h3 class="fh6">سافي برو</h3>
+          <p class="fp6">دفعة واحدة مدى الحياة تزيل جميع الإعلانات وتفتح كل الميزات.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="background:linear-gradient(180deg,transparent,rgba(212,175,55,.03),transparent)">
+    <div class="section-inner">
+      <div class="section-tag" id="howTag">كيف يعمل</div>
+      <h2 class="section-title" id="howTitle">ثلاث خطوات فقط</h2>
+      <div class="steps" id="stepsList">
+        <div class="step" style="animation-delay:.05s">
+          <div class="step-num">١</div>
+          <div><h3 class="sh1">افتح التطبيق واختر الفئة</h3><p class="sp1">اختر من بين لقطات الشاشة أو التكرارات أو الفيديوهات أو الصور الكبيرة.</p></div>
+        </div>
+        <div class="step" style="animation-delay:.1s">
+          <div class="step-num">٢</div>
+          <div><h3 class="sh2">مرّر وقرّر</h3><p class="sp2">اسكرول للأسفل لحذف الصورة، أو اضغط زر الإبقاء لحفظها. بسرعة وسهولة.</p></div>
+        </div>
+        <div class="step" style="animation-delay:.15s">
+          <div class="step-num">٣</div>
+          <div><h3 class="sh3">حذف دفعة واحدة</h3><p class="sp3">اضغط زر "حذف" في الأعلى لتنفيذ جميع قراراتك في ثانية واحدة.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGES -->
+  <section>
+    <div class="section-inner">
+      <div class="section-tag" id="pagesTag">الصفحات</div>
+      <h2 class="section-title" id="pagesTitle">تصفح الموقع</h2>
+      <div class="pages-grid">
+        <a href="support/" class="page-card" style="animation-delay:.05s">
+          <div class="page-card-icon">🛟</div>
+          <h2 id="card1title">الدعم الفني</h2>
+          <p id="card1desc">أسئلة شائعة، دليل استخدام، تواصل مباشر مع الفريق والإبلاغ عن المشاكل.</p>
+          <span class="page-card-arrow" id="card1arrow">استعرض الدعم الفني ←</span>
+        </a>
+        <a href="privacy-policy/" class="page-card" style="animation-delay:.1s">
+          <div class="page-card-icon">🔒</div>
+          <h2 id="card2title">سياسة الخصوصية</h2>
+          <p id="card2desc">تفاصيل كاملة عن كيفية تعامل سافي مع بياناتك وصورك وخصوصيتك.</p>
+          <span class="page-card-arrow" id="card2arrow">اقرأ السياسة ←</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRO -->
+  <section>
+    <div class="section-inner">
+      <div class="pro-section">
+        <div class="section-tag" id="proTag">سافي برو</div>
+        <h2 class="section-title" id="proTitle">تجربة لا إعلانات. مدى الحياة.</h2>
+        <div class="pro-price">
+          <span class="pro-price-num" id="proPrice">49.99</span>
+          <span class="pro-price-label" id="proCurrency">ريال · دفعة واحدة</span>
+        </div>
+        <div class="pro-features" id="proFeaturesList">
+          <span class="pro-feat-pill">✓ بدون إعلانات</span>
+          <span class="pro-feat-pill">✓ جميع الميزات</span>
+          <span class="pro-feat-pill">✓ لا تجديد تلقائي</span>
+          <span class="pro-feat-pill">✓ على نفس Apple ID</span>
+          <span class="pro-feat-pill">✓ تحديثات مستقبلية</span>
+        </div>
+        <a href="https://apps.apple.com" class="btn-primary" id="proBtn">
+          <svg viewBox="0 0 24 24" fill="#000" width="18" height="18"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          احصل على سافي برو
+        </a>
+        <p style="margin-top:14px;font-size:.8rem;color:var(--muted)" id="proNote">الشراء عبر Apple App Store · Product ID: com.safi.app.lifetime</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-links">
+      <a href="support/" id="footSupport">الدعم الفني</a>
+      <a href="privacy-policy/" id="footPrivacy">سياسة الخصوصية</a>
+      <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" id="footEula">شروط الاستخدام EULA</a>
+      <a href="mailto:abdulmajeed.k.r@gmail.com" id="footEmail">تواصل معنا</a>
+    </div>
+    <p id="footCopy">© 2026 Safi App — جميع الحقوق محفوظة</p>
+  </footer>
+
+  <script>
+    // ── Canvas particles ──
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, pts = [];
+    function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    for (let i = 0; i < 100; i++) pts.push({
+      x: Math.random()*1e4, y: Math.random()*1e4,
+      vx: (Math.random()-.5)*.25, vy: (Math.random()-.5)*.25,
+      r: Math.random()*1.4+.4, a: Math.random()*.4+.08,
+      gold: Math.random()>.65
+    });
+    function tick() {
+      ctx.clearRect(0,0,W,H);
+      pts.forEach(p => {
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x%W, p.y%H, p.r, 0, Math.PI*2);
+        ctx.fillStyle = p.gold ? `rgba(212,175,55,${p.a})` : `rgba(180,180,255,${p.a*.4})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    // ── Nav scroll tint ──
+    window.addEventListener('scroll', () => {
+      document.querySelector('nav').style.background =
+        scrollY > 40 ? 'rgba(4,4,10,.92)' : 'rgba(4,4,10,.7)';
+    });
+
+    // ── Lang ──
+    const T = {
+      ar: {
+        heroBadge:'متاح الآن على App Store', heroTitle1:'نظّف معرضك', heroTitle2:'حرّر مساحتك',
+        heroSub:'سافي يجعل تنظيف آلاف الصور أمراً ممتعاً وسريعاً. إيماءة واحدة تكفي.',
+        heroBtnText:'تحميل على App Store', heroSupportText:'الدعم الفني',
+        stat1l:'صورة يمكن مراجعتها', stat2l:'بيانات تُرسل للخارج', stat3l:'دفعة واحدة مدى الحياة',
+        featTag:'المميزات', featTitle:'كل ما تحتاجه لمعرض نظيف',
+        featSub:'سافي يجمع الأدوات الذكية في تطبيق واحد بسيط وسريع وخاص.',
+        fh1:'مراجعة سريعة',fp1:'تصفح الصور بإيماءة واحدة. سكرول للأسفل = حذف، زر الإبقاء = حفظ.',
+        fh2:'تصنيف ذكي',fp2:'لقطات شاشة، تكرارات، فيديوهات — كل فئة في مكانها.',
+        fh3:'خصوصية تامة',fp3:'لا خوادم، لا حسابات. كل شيء يبقى على جهازك.',
+        fh4:'حذف آمن',fp4:'الصور تذهب إلى "المحذوفة مؤخراً" — 30 يوماً للاستعادة.',
+        fh5:'أداء فائق',fp5:'محسّن لأحدث أجهزة iPhone.',
+        fh6:'سافي برو',fp6:'دفعة واحدة مدى الحياة تزيل الإعلانات.',
+        howTag:'كيف يعمل', howTitle:'ثلاث خطوات فقط',
+        sh1:'افتح التطبيق واختر الفئة',sp1:'اختر لقطات شاشة أو تكرارات أو فيديوهات.',
+        sh2:'مرّر وقرّر',sp2:'سكرول للأسفل = حذف، زر الإبقاء = حفظ.',
+        sh3:'حذف دفعة واحدة',sp3:'اضغط "حذف" لتنفيذ جميع القرارات في ثانية.',
+        pagesTag:'الصفحات', pagesTitle:'تصفح الموقع',
+        card1title:'الدعم الفني', card1desc:'أسئلة شائعة ودليل استخدام وتواصل مباشر.', card1arrow:'استعرض الدعم الفني ←',
+        card2title:'سياسة الخصوصية', card2desc:'كيفية تعامل سافي مع بياناتك وخصوصيتك.', card2arrow:'اقرأ السياسة ←',
+        proTag:'سافي برو', proTitle:'تجربة لا إعلانات. مدى الحياة.',
+        proPrice:'49.99', proCurrency:'ريال · دفعة واحدة',
+        proBtn:'احصل على سافي برو',
+        proNote:'الشراء عبر Apple App Store · Product ID: com.safi.app.lifetime',
+        footSupport:'الدعم الفني', footPrivacy:'سياسة الخصوصية',
+        footEula:'شروط الاستخدام EULA', footEmail:'تواصل معنا',
+        footCopy:'© 2026 Safi App — جميع الحقوق محفوظة',
+        navSupport:'الدعم', navPrivacy:'الخصوصية', navDownload:'تحميل مجاناً',
+      },
+      en: {
+        heroBadge:'Available Now on App Store', heroTitle1:'Clean Your Gallery', heroTitle2:'Free Your Space',
+        heroSub:'Safi makes cleaning thousands of photos fast and enjoyable. One swipe is all it takes.',
+        heroBtnText:'Download on App Store', heroSupportText:'Support',
+        stat1l:'Photos you can review', stat2l:'Data sent externally', stat3l:'One-time lifetime payment',
+        featTag:'Features', featTitle:'Everything you need for a clean gallery',
+        featSub:'Safi combines smart tools in one simple, fast, and private app.',
+        fh1:'Fast Review',fp1:'Browse photos with one gesture. Swipe down = delete, tap Keep = save.',
+        fh2:'Smart Sorting',fp2:'Screenshots, duplicates, videos — every category in its place.',
+        fh3:'Full Privacy',fp3:'No servers, no accounts. Everything stays on your device.',
+        fh4:'Safe Delete',fp4:'Photos go to Recently Deleted — 30 days to recover.',
+        fh5:'High Performance',fp5:'Optimized for the latest iPhone devices.',
+        fh6:'Safi Pro',fp6:'One-time lifetime payment removes all ads.',
+        howTag:'How It Works', howTitle:'Just Three Steps',
+        sh1:'Open the app and choose a category',sp1:'Pick screenshots, duplicates, or videos.',
+        sh2:'Swipe and decide',sp2:'Swipe down = delete, tap Keep = save.',
+        sh3:'Bulk delete',sp3:'Tap "Delete" to execute all decisions in one second.',
+        pagesTag:'Pages', pagesTitle:'Browse the Site',
+        card1title:'Technical Support', card1desc:'FAQ, user guide, and direct contact.', card1arrow:'View Support →',
+        card2title:'Privacy Policy', card2desc:'How Safi handles your data and privacy.', card2arrow:'Read Policy →',
+        proTag:'Safi Pro', proTitle:'Zero Ads Experience. Forever.',
+        proPrice:'49.99', proCurrency:'SAR · One-Time',
+        proBtn:'Get Safi Pro',
+        proNote:'Purchase via Apple App Store · Product ID: com.safi.app.lifetime',
+        footSupport:'Support', footPrivacy:'Privacy Policy',
+        footEula:'Terms of Use EULA', footEmail:'Contact Us',
+        footCopy:'© 2026 Safi App — All rights reserved',
+        navSupport:'Support', navPrivacy:'Privacy', navDownload:'Download Free',
+      }
+    };
+    function setLang(lang) {
+      const isAr = lang === 'ar';
+      const t = T[lang];
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+      Object.keys(t).forEach(k => {
+        const el = document.getElementById(k);
+        if (el) el.textContent = t[k];
+      });
+      // Feature cards
+      ['fh1','fp1','fh2','fp2','fh3','fp3','fh4','fp4','fh5','fp5','fh6','fp6'].forEach(k => {
+        document.querySelectorAll('.'+k).forEach(el => el.textContent = t[k]);
+      });
+      // Steps
+      ['sh1','sp1','sh2','sp2','sh3','sp3'].forEach(k => {
+        document.querySelectorAll('.'+k).forEach(el => el.textContent = t[k]);
+      });
+      document.querySelectorAll('.lang-toggle-nav button').forEach(b => {
+        b.classList.toggle('active', isAr ? b.textContent==='ع' : b.textContent==='EN');
+      });
+      // Pro pills
+      const pills = document.getElementById('proFeaturesList');
+      if (pills) {
+        pills.innerHTML = isAr
+          ? '<span class="pro-feat-pill">✓ بدون إعلانات</span><span class="pro-feat-pill">✓ جميع الميزات</span><span class="pro-feat-pill">✓ لا تجديد تلقائي</span><span class="pro-feat-pill">✓ على نفس Apple ID</span><span class="pro-feat-pill">✓ تحديثات مستقبلية</span>'
+          : '<span class="pro-feat-pill">✓ No Ads</span><span class="pro-feat-pill">✓ All Features</span><span class="pro-feat-pill">✓ No Auto-Renewal</span><span class="pro-feat-pill">✓ Same Apple ID</span><span class="pro-feat-pill">✓ Future Updates</span>';
+      }
+    }
+
+    // ── Intersection observer ──
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity=1; observer.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.feat-card,.step,.page-card').forEach(el => { el.style.opacity=0; observer.observe(el); });
+  </script>
+</body>
+</html>
